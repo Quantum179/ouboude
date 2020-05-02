@@ -2,12 +2,9 @@
 import express from 'express'
 import http from 'http'
 
-import { getStatusText } from 'http-status-codes'
 import cors from 'cors'
-import bodyParser from 'body-parser'
 import helmet from 'helmet'
 import {initSocket} from './socket'
-import router from './router'
 
 export const corsOptions = {
   origin: 'http://localhost:8080',
@@ -26,7 +23,7 @@ app.use((req, res, next) => {
 })
 
 // Web Sockets Configuration
-app.use(initSocket(server))
+initSocket(server)
 
 // Error handler
 app.use(function (err, req, res, next) {
