@@ -10,15 +10,22 @@ export const validateMove = (payload) => {
 
 export const startGame = () => {
   const hands = []
-  const dom = JSON.parse(JSON.stringify(dominos))
+  let dom = JSON.parse(JSON.stringify(dominos))
 
   for (let i = 0; i < 4; i++) {
     hands[i] = []
+
     for (let j = 0; j < 7; j++) {
-      hands[i][j] = dominos.splice(Math.trunc(Math.random() * (dominos.length + 1 - 0)), 1)
+      let index
+      
+      do {
+        index = Math.floor(Math.random() * (dom.length + 1))
+      } while(!dom[index])
+
+      hands[i].push(dom[index])
+      dom.splice(index, 1)
     }
   }
 
-  console.log(hands)
   return hands
 }

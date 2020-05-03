@@ -19,14 +19,19 @@
       <div class="popup">{{text}}</div>
     </div>
     <div class="board">PLATEAU DE JEU</div>
-    <div :class="`player-${index}`" v-for="index in 4" :key="index">
-      <div class="domino">5 - 1</div>
-      <div class="domino">6 - 2</div>
-      <div class="domino">6 - 2</div>
-      <div class="domino">6 - 2</div>
-      <div class="domino">6 - 2</div>
-      <div class="domino">6 - 2</div>
-      <div class="domino">6 - 2</div>
+    <div :class="`player-${i+1}`" v-for="i in 3" :key="`player-${i}`">
+      <div class="domino" v-for="j in 7" :key="j"></div>
+    </div>
+    <div class="player-1" v-if="fetched">
+      <div class="domino" v-for="(domino, i) in hand" :key="i">
+        <div class="half-dom" :class="`dom-${domino.left}`">
+          <div class="dot" v-for="j in domino.left" :key="j"></div>
+        </div>
+        <div class="line"></div>
+        <div class="half-dom" :class="`dom-${domino.right}`">
+          <div class="dot" v-for="j in domino.right" :key="j"></div>
+        </div>
+      </div>
     </div>
   </div>
 </transition>
@@ -39,7 +44,7 @@ export default {
   data() {
     return {
       players: [],
-      currentPlayer: null,
+      currentOrder: null,
       board: [],
       hand: null,
       selectedDomino: null,
@@ -48,7 +53,8 @@ export default {
       currentRoom: null,
       text: '',
       error: '',
-      wantJoin: false
+      wantJoin: false,
+      fetched: false
     }
   },
   mounted() {
@@ -58,43 +64,11 @@ export default {
     initSocket() {
       const that = this
 
-      this.socket.on('onGameCreated', (data) => {
-        this.currentRoom = data.room
-        this.text = `Voici le lien de la partie : ${this.currentRoom}`
-        this.closePopup()
-        this.players.push(data.player)
-        this.currentPlayer = player
-        // TODO : display popup with custom link to join the room
-      })
-      this.socket.on('onGameJoined', (data) => {
-        if (data.success) {
-          this.display = 'game'
-          // TODO : display others players
-        }
-      })
-      this.socket.on('onNewPlayer', (data) => {
-        this.text = `Le joueur ${data.nickname} a rejoint la partie`
-        this.closePopup()
-        this.players.push(data.player)
-
-        if(this.players.length === 4 && this.currentPlayer.order === 1) {
-          this.socket.emit('startGame', this.currentRoom)
-        }
-        // display hidden hand of new player on grid
-      })
-
-
-      this.socket.on('onGameStarted', (data) => {
-        console.log(data)
-        this.hand = data.hand
-        // TODO : tell player 1 it's his turn
-      })
-
-
-      this.socket.on('onNewMove', (data) => {
-        // TODO : add new domino to currentPlayer's board
-        // TODO : check if it's currentPlayer's turn
-      })
+      this.socket.on('onGameCreated', that.onGameCreated)
+      this.socket.on('onGameJoined', that.onGameJoined)
+      this.socket.on('onNewPlayer', that.onNewPlayer)
+      this.socket.on('onGameStarted', that.onGameStarted)
+      this.socket.on('onNewMove', that.onNewMove)
     },
     createGame() {
       if (document.getElementById('name').value === '') {
@@ -115,6 +89,43 @@ export default {
     },
     playMove() {
       this.socket.emit('playMove', {})
+    },
+    onGameCreated(payload) {
+      this.currentRoom = payload.room
+      this.text = `Voici le lien de la partie : ${this.currentRoom}`
+      this.closePopup()
+      this.players.push(payload.player)
+      this.currentOrder = payload.order
+      // TODO : display popup with custom link to join the room
+    },
+    onGameJoined(payload) {
+      if (payload.success) {
+        this.players = payload.players
+        this.currentOrder = payload.order
+        this.display = 'game'
+        // TODO : display others players
+      }
+    },
+    onNewPlayer(player) {
+      this.text = `Le joueur ${player.nickname} a rejoint la partie`
+      this.closePopup()
+      this.players.push(player)
+
+      if (this.players.length === 4 && this.currentOrder === 1) {
+        setTimeout(() => {
+          this.socket.emit('startGame', this.currentRoom)
+        }, 2000);
+      }
+      // display hidden hand of new player on grid
+    },
+    onGameStarted(payload) {
+      this.hand = payload.hand
+      this.fetched = true
+      // TODO : tell player 1 it's his turn
+    },
+    onNewMove(payload) {
+      // TODO : add new domino to currentPlayer's board
+      // TODO : check if it's currentPlayer's turn
     },
     closePopup() {
       setTimeout(() => {
@@ -178,6 +189,27 @@ body
   height 55%
   background-color white
   margin 10px
+  display flex
+  flex-direction column
+  align-items center
+  border 2px solid black
+
+.half-dom
+  width 100%
+  height 50%
+  display flex
+
+.line
+  width 65%
+  height 5%
+  padding 0 10%
+  background-color black
+
+.dot
+  width 50px
+  height 50px
+  background-color black
+  border-radius 50%
 
 .container
   @extend .flex-center

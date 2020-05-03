@@ -1,5 +1,6 @@
 import SocketIO from 'socket.io'
-import { v4 as uuid4} from 'uuid'
+import { v4 as uuid4 } from 'uuid'
+import util from 'util'
 import { validateMove, startGame } from './gameEngine'
 
 const rooms = []
@@ -22,40 +23,52 @@ export const initSocket = (server) => {
       rooms[roomID].created = true
       rooms[roomID].players = []
 
-      const player = { id: socket.id, nickname, order: rooms[roomID].players.length + 1}
+      const player = { socket, nickname, order: rooms[roomID].players.length + 1 }
+
       rooms[roomID].players.push(player)
 
-      socket.emit('onGameCreated', {room: roomID, player})
+      socket.emit('onGameCreated', { room: roomID, order: player.order })
     })
 
     socket.on('joinGame', (data) => {
       const { roomID, nickname } = data
-      console.log(data)
 
       if (rooms[roomID] && rooms[roomID].started) {
         console.log('join request : game already started')
         socket.emit('onGameAlreadyStarted')
       }
-      socket.join(roomID)
-      const player = { id: socket.id, nickname, order: rooms[roomID].players.length + 1}
+      else if (!rooms[roomID]) {
+        console.log('no room available')
+        socket.emit('onGameNotFound')
+      } else {
+        console.log('new player joined')
+        socket.join(roomID)
 
-      console.log('new player joined')
-      socket.emit('onGameJoined', { players: rooms[roomID].players, success: true })
-      socket.broadcast.to(roomID).emit('onNewPlayer', player)
-
-      rooms[roomID].players.push(player)
+        const player = { socket, nickname, order: rooms[roomID].players.length + 1 }
+  
+        rooms[roomID].players.push(player)
+        
+        socket.emit('onGameJoined', {
+          players: rooms[roomID].players.map(x => { return { nickname: x.nickname, order: x.order } }),
+          order: player.order,
+          success: true
+        })
+        socket.broadcast.to(roomID).emit('onNewPlayer', { nickname: player.nickname, order: player.order })
+      }
     })
 
     socket.on('startGame', (roomID) => {
-      const players = io.sockets.clients(roomID)
       const hands = startGame()
+      const room = rooms[roomID]
 
-      rooms[roomID].started = true
+      if (!room) { return }
+      
+      room.started = true
 
-      for (let i = 0; i < players.length; i++) {
-        players[i].emit('onGameStarted', {hand: hands[i]})
+      for (let i = 0; i < room.players.length; i++) {
+        room.players[i].socket.emit('onGameStarted', {hand: hands[i]});
       }
-      // TODO : create logic in client game app to choose first player (for now, it's always the room's owner)
+      // // TODO : create logic in client game app to choose first player (for now, it's always the room's owner)
     })
 
     socket.on('playMove', (move, roomID) => {
