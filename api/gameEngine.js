@@ -1,10 +1,11 @@
 import dominos from './dominos'
 
-export const validateMove = (payload) => {
+export const validateDomino = (payload) => {
   if (!payload.hasOwnProperty('domino') || !!payload.hasOwnProperty('direction')) {
     return false
   }
 
+  return true
   // Améliorer la validation
 }
 
@@ -17,7 +18,7 @@ export const startGame = () => {
 
     for (let j = 0; j < 7; j++) {
       let index
-      
+
       do {
         index = Math.floor(Math.random() * (dom.length + 1))
       } while(!dom[index])
@@ -29,3 +30,5 @@ export const startGame = () => {
 
   return hands
 }
+
+// JE MARRETE POUR L'INSTANT, LIVE CODING PLUS TARD

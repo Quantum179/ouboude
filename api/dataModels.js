@@ -17,8 +17,7 @@ const domino2 = {
 // Move 
 const move = {
   domino: domino || null,
-  to: domino2,
-  direction: "left" // add at start of pile (unshift) / end of pile (push),
+  toLeft: false // add at start of pile (unshift) / end of pile (push),
 }
 
 const board = [

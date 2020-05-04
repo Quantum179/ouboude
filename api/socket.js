@@ -71,11 +71,16 @@ export const initSocket = (server) => {
       // // TODO : create logic in client game app to choose first player (for now, it's always the room's owner)
     })
 
-    socket.on('playMove', (move, roomID) => {
+    socket.on('playDomino', (domino, roomID) => {
       // TODO : check if playerID is valid for this room
-      if (validateMove(move)) {
-        io.to(roomID).emit('onNewMove', move)
+      if (validateDomino(domino)) {
+        socket.broadcast.to(roomID).emit('onNewDomino', domino)
       }
+    })
+
+    socket.on('finishGame', (winner, roomID) => {
+      // TODO : logic ?
+      socket.broadcast.to(roomID).emit('onGameFinished', winner)
     })
   })
 }
