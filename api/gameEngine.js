@@ -30,5 +30,3 @@ export const startGame = () => {
 
   return hands
 }
-
-// JE MARRETE POUR L'INSTANT, LIVE CODING PLUS TARD

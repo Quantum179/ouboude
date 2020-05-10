@@ -17,10 +17,6 @@ const server = http.Server(app)
 //Configuration
 app.use(cors({ origin: 'http://localhost:8080', credentials: true }))
 app.use(helmet())
-app.use((req, res, next) => {
-  sanitizer.escape(req)
-  next()
-})
 
 // Web Sockets Configuration
 initSocket(server)

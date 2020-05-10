@@ -3,15 +3,11 @@
 const domino = {
   left: 0,
   right: 0,
-  leftDomino: null, //pointer
-  rightDomino: null // pointer
 } // "boude" when player can't make a move
 
 const domino2 = {
   left: 0,
   right: 1,
-  leftDomino: null, //pointer
-  rightDomino: null // pointer
 }
 
 // Move 

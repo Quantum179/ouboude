@@ -18,6 +18,8 @@ module.exports = {
     'max-len': 0,
     'linebreak-style': 0,
     'no-unused-vars': 0,
+    'no-mixed-operators': 0,
+    'vue/no-use-v-if-with-v-for': 0
   },
   overrides: [
     {
