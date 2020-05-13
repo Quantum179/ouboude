@@ -24,21 +24,6 @@ export const initSocket = (server) => {
       // socket.broadcast.to(roomID).emit('onPlayerDisconnected', order)
     })
 
-    socket.on('reconnect', (data) => {
-      console.log('socket is reconnected')
-      // https://socket.io/docs/client-api/#Event-%E2%80%98reconnect%E2%80%99-1
-      // const { roomID, order } = data 
-
-      // socket.broadcast.to(roomID).emit('onPlayerReconnected', order)
-    })
-    socket.on('reconnecting', (data) => {
-      console.log('socket reconnecting')
-      // https://socket.io/docs/client-api/#Event-%E2%80%98reconnect%E2%80%99-1
-      // const { roomID, order } = data 
-
-      // socket.broadcast.to(roomID).emit('onPlayerReconnected', order)
-    })
-
     socket.on('createNewGame', (data) => {
       console.log('game creation request')
 
@@ -109,6 +94,8 @@ export const initSocket = (server) => {
             console.log('impossible')
           } 
         }
+
+        console.log('order : ' + player.order)
         
         socket.emit('onGameJoined', {
           players: room.players.map(x => { return { id: x.id, nickname: x.nickname, order: x.order, nbDominos: 7 } }),
@@ -146,14 +133,16 @@ export const initSocket = (server) => {
       if (room) {
         const player = room.players.find(x => x.id === playerID)
 
-        if (room.started) {
-          player.connected = false
-          if (room.currentOrder === player.order) {
-            // todo : activate bot and play immediately
+        if (player) {
+          if (room.started) {
+            player.connected = false
+            if (room.currentOrder === player.order) {
+              // todo : activate bot and play immediately
+            }
+          } else {
+            room.players.splice(room.players.indexOf(player), 1)
+            socket.broadcast.to(roomID).emit('onPlayerLeft', playerID)
           }
-        } else {
-          room.players.splice(room.players.indexOf(player), 1)
-          socket.broadcast.to(roomID).emit('onPlayerLeft', playerID)
         }
       }
     })
@@ -161,6 +150,8 @@ export const initSocket = (server) => {
     socket.on('resumeGame', (data) => {
       const { roomID, playerID } = data
       const room = rooms[roomID]
+
+      console.log('game resumed : ' + playerID)
 
       if (room) {
         const player = room.players.find(x => x.id === playerID)
@@ -240,7 +231,7 @@ export const initSocket = (server) => {
           io.to(roomID).emit('onGameFinished', playerID)
         }
       } else {
-        console.log('joueur boudé')
+        console.log('joueur boudé : ' + player.order)
         room.boudeCount += 1
 
         if (room.boudeCount === room.mode) {
