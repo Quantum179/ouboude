@@ -30,10 +30,9 @@ app.use(function (err, req, res, next) {
 // Environment Configuration
 const env = process.env
 const IPADDR = env.IP
-const PORT = env.PORT || 5000
 
 // Run App
-server.listen(5000, () =>
+server.listen(process.env.PORT || 5000, () =>
   console.log('Server is currently running at port 5000...')
 )
 
