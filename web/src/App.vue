@@ -113,11 +113,11 @@ export default {
       window.addEventListener('resize', this.changeMediaSize)
     }
 
-    const connection = process.env.NODE_ENV === 'development'
-      ? 'http://localhost:5000'
-      : 'https://ouboude-api.herokuapp.com/:5000'
+    // const connection = process.env.NODE_ENV === 'development'
+    //   ? 'http://localhost:5000'
+    //   : 'https://ouboude-api.herokuapp.com/:5000'
 
-    this.socket = io.connect(connection, { transports: ['websocket'], upgrade: false })
+    this.socket = io.connect('https://ouboude-api.herokuapp.com/:5000', { transports: ['websocket'], upgrade: false })
     // window.addEventListener('scroll', this.changeSection);
   },
   mounted() {
