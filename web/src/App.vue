@@ -14,10 +14,6 @@
       </div>
     </div>
     <div id="game" key="2" v-if="display === 'game'">
-      <div class="turn">
-        <span>Tour</span>
-        <span>{{currentOrder}}</span>
-      </div>
       <div class="room">{{currentRoom}}</div>
       <div class="container">
         <div class="popup" v-if="text !== ''">{{text}}</div>
@@ -39,33 +35,19 @@
             <div :class="`dot-${j}`" v-for="j in domino.right" :key="j"></div>
           </div>
         </div>
-        <div class="tiny-board">
-          <div class="domino" :class="dominoBoardStyles(domino)" v-for="(domino, i) in board" :key="i">
-            <div class="half-dom" :class="`dom-${domino.left}`">
-              <div :class="`dot-${j}`" v-for="j in domino.left" :key="j"></div>
-            </div>
-            <div class="line"></div>
-            <div class="half-dom" :class="`dom-${domino.right}`">
-              <div :class="`dot-${j}`" v-for="j in domino.right" :key="j"></div>
-            </div>
-          </div>
-        </div>
-        <div class="domino" :class="dominoBoardStyles(domino)" v-for="(domino, i) in board" :key="i">
-          <div class="half-dom" :class="`dom-${domino.left}`">
-            <div :class="`dot-${j}`" v-for="j in domino.left" :key="j"></div>
-          </div>
-          <div class="line"></div>
-          <div class="half-dom" :class="`dom-${domino.right}`">
-            <div :class="`dot-${j}`" v-for="j in domino.right" :key="j"></div>
-          </div>
-        </div>
       </div>
       <div :class="`player-${player.boardOrder}`" v-for="(player, i) in players" :key="`player-${i}`">
         <div class="domino" v-for="j in player.nbDominos" :key="j"></div>
       </div>
       <div class="player-1" v-if="fetched">
         <div class="avatar"></div>
-        <div class="btn" @click="playDomino()">Boudé</div>
+        <div class="boude-container">
+          <div class="btn" @click="playDomino()">Boudé</div>
+        </div>
+        <div class="turn">
+          <span>Tour</span>
+          <span>{{currentOrder}}</span>
+        </div>
         <div class="domino-list">
           <div class="domino" v-for="(domino, i) in hand" :key="i"
           @click="selectDomino(domino)"
@@ -98,7 +80,7 @@ export default {
       board: [],
       hand: null,
       selectedDomino: null,
-      socket: io.connect('http://localhost:5000', { transports: ['websocket'], upgrade: false }),
+      socket: null,
       display: 'home',
       currentRoom: null,
       text: '',
@@ -130,6 +112,12 @@ export default {
 
       window.addEventListener('resize', this.changeMediaSize)
     }
+
+    const connection = process.env.NODE_ENV === 'development'
+      ? 'http://localhost:5000'
+      : 'https://ouboude-api.herokuapp.com/:5000'
+
+    this.socket = io.connect(connection, { transports: ['websocket'], upgrade: false })
     // window.addEventListener('scroll', this.changeSection);
   },
   mounted() {
@@ -398,13 +386,27 @@ export default {
     },
     dominoBoardStyles(domino) {
       const isDouble = this.isDouble(domino)
+      const index = this.board.indexOf(domino)
+      const breakpoint = this.defineShrinkBreapoint()
 
       return {
         simple: !isDouble,
         double: isDouble,
         mobile: this.isMobile,
-        desktop: !this.isMobile
+        desktop: !this.isMobile,
+        shrink: this.board.length > breakpoint && index !== 0 && index !== this.board.length - 1
       }
+    },
+    defineShrinkBreapoint() {
+      const height = window.innerHeight
+      const width = window.innerWidth
+
+      if (this.isMobile && height < 500) { return 5 }
+      if (this.isMobile && height < 1000) { return 12 }
+      if (!this.mobile && width < 1400) { return 12 }
+      if (!this.mobile && width < 2000) { return 15 }
+
+      return 10
     },
     openPopup(text) {
       this.text = text
@@ -457,14 +459,14 @@ body
   'p2 board board board p4'\
   'p2 board board board p4'\
   'p1 p1 p1 p1 p1'
-  grid-template-rows .5fr .5fr 1fr .5fr 1fr
+  grid-template-rows .5fr .5fr 1fr .5fr .5fr
   grid-template-columns 1fr 1fr 1fr 1fr 1fr
 
 .player-1
   grid-area p1
   display grid
   grid-template-areas:
-  'avatar btn .'\
+  'avatar boude turn'\
   'list list list'
   grid-template-rows .2fr 2fr
   grid-template-columns 1fr 2fr 1fr
@@ -498,13 +500,11 @@ body
 .avatar
   grid-area avatar
 
-.btn
-  grid-area btn
-
 .domino-list
   grid-area list
   @extend .flex-center
   & > .domino
+    cursor pointer
     width 40px
     height 65px
     margin 4px
@@ -526,28 +526,52 @@ body
 
 .line
   width 80%
-  height 4px
+  height 1.5px
   padding 0
   background-color black
 
 [class^='dot-']
   background-color black
   border-radius 50%
-  padding 3px
+  // padding 3px
 
-.board, .tiny-board
+.board
   @extend .flex-center
   flex-direction column
   min-width 100%
   height 100%
 
-.board
+.container, .boude-container
+  @extend .flex-center
+
+.board, .container
   grid-area board
 
+.boude-container
+  grid-area boude
+  & > .btn
+    @extend .flex-center
+    width 50px
+    height 30px
+    background-color white
+    border-radius 15%
+    &:hover
+      border 2px solid black
+
+.selection, .popup
+  width 80%
+  background-color white
+  border-radius 50%
+  text-align center
+  z-index 2
+
 .simple.mobile
-  width 30px
-  height 50px
+  width 20px
+  height 35px
   margin .5px
+  &.shrink
+    width 5px
+    height 10px
 
 .simple.desktop
   flex-direction row
@@ -559,14 +583,17 @@ body
     height 70%
     transform rotate(-90deg)
   & > .line
-      width 10px
+      width 5px
       height 70%
       padding 5px 0
+  &.shrink
+    width 32.5px
+    height 17.5px
 
 .double.mobile
   flex-direction row
-  width 50px
-  height 30px
+  width 35px
+  height 20px
   margin .5px
   & > .half-dom
     width 45%
@@ -576,11 +603,17 @@ body
     width 4px
     height 70%
     padding 2px 0
+  &.shrink
+    width 10px
+    height 5px
 
 .double.desktop
   width 45px
   height 75px
   margin .5px
+  &.shrink
+    width 17.5px
+    height 32.5px
 
 .domino
   background-color white
@@ -591,6 +624,26 @@ body
   &.disabled
     background-color rgba(0, 0, 0, 0.45)
 
+.shrink
+  margin .25px
+
+.turn
+  grid-area turn
+  top 20px
+  left 20px
+  width 75px
+  border-radius 50%
+  border 2px solid white
+  display flex
+  justify-content center
+  align-items center
+  font-size 1em
+  flex-direction column
+  background-color blue
+  color white
+
+// @media (min-width: 401px)
+
 @media (min-width: 768px)
   .board
     flex-direction row
@@ -599,8 +652,10 @@ body
     width 70px
     height 120px
     margin 10px
-    &:hover
-      margin-bottom 30px
+
+  .boude-container > .btn
+    width 80px
+    height 60px
 
 @media (min-width: 1023px)
   .board.domino
@@ -616,7 +671,6 @@ body
       width 80%
       height 5px
 
-
 // #game
 //   display grid
 //   width 100%
@@ -627,22 +681,6 @@ body
 //   '. p1 .'
 //   grid-template-rows 1fr 2fr 2fr
 //   grid-template-columns 1fr 12fr 1fr
-
-// .turn
-//   position fixed
-//   top 40px
-//   left 40px
-//   width 100px
-//   height 100px
-//   border-radius 50%
-//   border 2px solid white
-//   display flex
-//   justify-content center
-//   align-items center
-//   font-size 2em
-//   flex-direction column
-//   background-color blue
-//   color white
 
 // [class^="player-"]
 //   display flex

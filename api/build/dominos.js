@@ -1,0 +1,93 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+var _default = [{
+  left: 0,
+  right: 0
+}, {
+  left: 0,
+  right: 1
+}, {
+  left: 0,
+  right: 2
+}, {
+  left: 0,
+  right: 3
+}, {
+  left: 0,
+  right: 4
+}, {
+  left: 0,
+  right: 5
+}, {
+  left: 0,
+  right: 6
+}, {
+  left: 1,
+  right: 1
+}, {
+  left: 1,
+  right: 2
+}, {
+  left: 1,
+  right: 3
+}, {
+  left: 1,
+  right: 4
+}, {
+  left: 1,
+  right: 5
+}, {
+  left: 1,
+  right: 6
+}, {
+  left: 2,
+  right: 2
+}, {
+  left: 2,
+  right: 3
+}, {
+  left: 2,
+  right: 4
+}, {
+  left: 2,
+  right: 5
+}, {
+  left: 2,
+  right: 6
+}, {
+  left: 3,
+  right: 3
+}, {
+  left: 3,
+  right: 4
+}, {
+  left: 3,
+  right: 5
+}, {
+  left: 3,
+  right: 6
+}, {
+  left: 4,
+  right: 4
+}, {
+  left: 4,
+  right: 5
+}, {
+  left: 4,
+  right: 6
+}, {
+  left: 5,
+  right: 5
+}, {
+  left: 5,
+  right: 6
+}, {
+  left: 6,
+  right: 6
+}];
+exports["default"] = _default;
+//# sourceMappingURL=dominos.js.map

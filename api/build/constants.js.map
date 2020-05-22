@@ -1,0 +1,1 @@
+{"version":3,"sources":["../src/constants.js"],"names":["baseUrl"],"mappings":";;;;;;AAAO,IAAMA,OAAO,GAAG,8BAAhB","sourcesContent":["export const baseUrl = 'http://127.0.0.1:5000/api/v1'"],"file":"constants.js"}
