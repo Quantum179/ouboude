@@ -115,10 +115,10 @@ export default {
     }
 
     const connection = process.env.NODE_ENV === 'production'
-      ? 'https://ouboude-api.herokuapp.com:57605'
+      ? 'https://ouboude-api.herokuapp.com'
       : 'http://localhost:5000'
 
-    this.socket = io.connect(connection, { transports: ['websocket'], upgrade: false })
+    this.socket = io.connect('ws://ouboude-api.herokuapp.com', { transports: ['websocket'], upgrade: false })
     console.log(connection)
     // window.addEventListener('scroll', this.changeSection);
   },

@@ -7,7 +7,7 @@ const rooms = []
 export const initSocket = (server, origin) => {
   const io = new SocketIO(server)
   io.set('origins', origin)
-  io.set('transports', ['websocket'])
+  io.set('transports', ['polling'])
 
   io.on('connection', (socket) => {
     console.log('a new socket client is connected')
