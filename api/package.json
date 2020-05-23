@@ -4,7 +4,7 @@
   "description": "",
   "main": "api.js",
   "scripts": {
-    "start:dev": "nodemon --exec babel-node api.js",
+    "dev": "nodemon --exec babel-node ./src/api.js",
     "start": "node ./build/api.js",
     "clean": "rimraf build && npx mkdirp build",
     "build": "npm run clean && npm run build-babel",

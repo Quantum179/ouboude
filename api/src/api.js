@@ -4,22 +4,19 @@ import http from 'http'
 
 import cors from 'cors'
 import helmet from 'helmet'
-import {initSocket} from './socket'
+import { initSocket } from './socket'
 
-export const corsOptions = {
-  origin: 'http://localhost:8080',
-  optionsSuccessStatus: 200
-}
+const origin = process.env.NODE_ENV === 'production' ? 'https://youthful-mahavira-1694db.netlify.app' : 'http://localhost:8080'
 
 const app = express()
 const server = http.Server(app)
 
 //Configuration
-app.use(cors({ origin: 'https://youthful-mahavira-1694db.netlify.app:8080', credentials: true })) // 
+app.use(cors({ origin, credentials: true })) // 
 app.use(helmet())
 
 // Web Sockets Configuration
-initSocket(server)
+initSocket(server, origin)
 
 // Error handler
 app.use(function (err, req, res, next) {

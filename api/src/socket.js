@@ -4,9 +4,9 @@ import { startGame } from './gameEngine'
 
 const rooms = []
 
-export const initSocket = (server) => {
+export const initSocket = (server, origin) => {
   const io = new SocketIO(server)
-  io.set('origins', 'http://localhost:8080')
+  io.set('origins', origin)
 
   io.on('connection', (socket) => {
     console.log('a new socket client is connected')
