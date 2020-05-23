@@ -115,7 +115,7 @@ export default {
     }
 
     const connection = process.env.NODE_ENV === 'production'
-      ? 'https://ouboude-api.herokuapp.com:37990'
+      ? 'https://ouboude-api.herokuapp.com:57605'
       : 'http://localhost:5000'
 
     this.socket = io.connect(connection, { transports: ['websocket'], upgrade: false })
