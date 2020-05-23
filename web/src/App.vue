@@ -104,6 +104,7 @@ export default {
     }
   },
   created() {
+    debugger
     if (matchMedia) {
       this.mq.mobile = window.matchMedia('(max-width:480px)')
       this.mq.largeMobile = window.matchMedia('(min-width:481px) and (max-width:767px')
@@ -113,11 +114,11 @@ export default {
       window.addEventListener('resize', this.changeMediaSize)
     }
 
-    // const connection = process.env.NODE_ENV === 'development'
-    //   ? 'http://localhost:5000'
-    //   : 'https://ouboude-api.herokuapp.com/:5000'
+    const connection = process.env.NODE_ENV === 'development'
+      ? 'http://localhost:5000'
+      : 'https://ouboude-api.herokuapp.com'
 
-    this.socket = io.connect('https://ouboude-api.herokuapp.com/:5000', { transports: ['websocket', 'xhr-polling', 'polling', 'htmlfile', 'flashsocket'], upgrade: false })
+    this.socket = io.connect(connection, { transports: ['websocket', 'xhr-polling', 'polling', 'htmlfile', 'flashsocket'], upgrade: false })
     // window.addEventListener('scroll', this.changeSection);
   },
   mounted() {
