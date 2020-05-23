@@ -6,7 +6,7 @@ import cors from 'cors'
 import helmet from 'helmet'
 import { initSocket } from './socket'
 
-const origin = process.env.NODE_ENV === 'production' ? 'https://youthful-mahavira-1694db.netlify.app' : 'http://localhost:8080'
+const origin = process.env.NODE_ENV === 'production' ? 'https://youthful-mahavira-1694db.netlify.app:' : 'http://localhost:8080'
 console.log(origin)
 
 const app = express()
