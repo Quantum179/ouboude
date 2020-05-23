@@ -6,7 +6,8 @@ const rooms = []
 
 export const initSocket = (server, origin) => {
   const io = new SocketIO(server, { path: '/socket'})
-  io.set('origins', origin)
+  io.set('origins', '*:*');
+  io.set('match origin protocol', true);
   io.set('transports', ['websocket'])
 
   io.on('connection', (socket) => {
