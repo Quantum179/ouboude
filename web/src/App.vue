@@ -118,7 +118,7 @@ export default {
       ? 'https://ouboude-api.herokuapp.com'
       : 'http://localhost:5000'
 
-    this.socket = io.connect('ws://ouboude-api.herokuapp.com', { transports: ['websocket'], upgrade: false })
+    this.socket = io.connect('ws://ouboude-api.herokuapp.com', { transports: ['websocket'], upgrade: false, path: '/socket' })
     console.log(connection)
     // window.addEventListener('scroll', this.changeSection);
   },
