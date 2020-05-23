@@ -15,7 +15,7 @@ const app = express()
 const server = http.Server(app)
 
 //Configuration
-app.use(cors({ origin: 'http://localhost:8080', credentials: true }))
+app.use(cors({ origin: 'https://youthful-mahavira-1694db.netlify.app:8080', credentials: true })) // 
 app.use(helmet())
 
 // Web Sockets Configuration

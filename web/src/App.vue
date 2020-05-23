@@ -117,7 +117,7 @@ export default {
     //   ? 'http://localhost:5000'
     //   : 'https://ouboude-api.herokuapp.com/:5000'
 
-    this.socket = io.connect('https://ouboude-api.herokuapp.com/:5000', { transports: ['websocket'], upgrade: false })
+    this.socket = io.connect('https://ouboude-api.herokuapp.com/:5000', { transports: ['websocket', 'xhr-polling', 'polling', 'htmlfile', 'flashsocket'], upgrade: false })
     // window.addEventListener('scroll', this.changeSection);
   },
   mounted() {
@@ -150,6 +150,7 @@ export default {
       this.socket.close()
     },
     createGame() {
+      debugger
       if (document.getElementById('name').value === '') {
         this.error = 'Entrez un nom'
         return
