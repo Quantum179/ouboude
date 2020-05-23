@@ -13,7 +13,7 @@ const app = express()
 const server = http.Server(app)
 
 //Configuration
-app.use(cors({ origin, credentials: true })) // 
+app.use(cors({ origin, credentials: true }))
 app.use(helmet())
 
 // Web Sockets Configuration
