@@ -116,9 +116,10 @@ export default {
 
     const connection = process.env.NODE_ENV === 'development'
       ? 'http://localhost:5000'
-      : 'https://ouboude-api.herokuapp.com:5000'
+      : 'https://ouboude-api.herokuapp.com'
 
     this.socket = io.connect(connection, { transports: ['websocket', 'xhr-polling', 'polling', 'htmlfile', 'flashsocket'], upgrade: false })
+    console.log(connection)
     // window.addEventListener('scroll', this.changeSection);
   },
   mounted() {
