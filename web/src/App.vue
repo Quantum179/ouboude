@@ -114,9 +114,9 @@ export default {
       window.addEventListener('resize', this.changeMediaSize)
     }
 
-    const connection = process.env.NODE_ENV === 'development'
-      ? 'http://localhost:5000'
-      : 'https://ouboude-api.herokuapp.com'
+    const connection = process.env.NODE_ENV === 'production'
+      ? 'https://ouboude-api.herokuapp.com'
+      : 'http://localhost:5000'
 
     this.socket = io.connect(connection, { transports: ['websocket'], upgrade: false })
     console.log(connection)
