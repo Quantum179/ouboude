@@ -6,7 +6,7 @@ import cors from 'cors'
 import helmet from 'helmet'
 import { initSocket } from './socket'
 
-const origin = process.env.NODE_ENV === 'production' ? 'https://ouboude-web.herokuapp.com/' : 'http://localhost:8080'
+const origin = process.env.NODE_ENV === 'production' ? 'https://ouboude-web.herokuapp.com' : 'http://localhost:8080'
 console.log(origin)
 
 const app = express()

@@ -5,9 +5,9 @@ import { startGame } from './gameEngine'
 const rooms = []
 
 export const initSocket = (server, origin) => {
-  const io = new SocketIO(server)
+  const io = new SocketIO(server, { path: '/socket'})
   io.set('origins', origin)
-  io.set('transports', ['polling'])
+  io.set('transports', ['websocket'])
 
   io.on('connection', (socket) => {
     console.log('a new socket client is connected')
