@@ -1,16 +1,47 @@
 <template>
   <transition>
     <div id="home" key="1" v-if="display === 'home'">
-      <div class="input-group">
-        <label for="name">Entrez votre pseudo :</label>
-        <input type="text" id="name" name="name" required maxlength="20">
-        <div class="error" v-if="error !== ''" style="color:red">{{error}}</div>
+      <div class="title">
+        <h1>Ou Boudé ?</h1>
+        <h2>Alpha v0.1.0</h2>
       </div>
-      <div class="btn" @click="createGame()">Nouvelle partie</div>
-      <div class="btn" @click="wantJoin = true">Rejoindre une partie</div>
-      <div v-if="wantJoin">
-        <input type="text" id="room" name="room" minlength ="36" maxlength="36">
-        <div class="btn" @click="joinGame()">Rejoindre la partie</div>
+      <div class="btn-list">
+        <div class="btn" @click="subDisplay = 'list'" :class="{selected: subDisplay === 'list'}">Liste des salles</div>
+        <div class="btn" @click="subDisplay = 'create'" :class="{selected: subDisplay === 'create'}">Nouvelle partie</div>
+        <div class="btn" @click="subDisplay = 'join'" :class="{selected: subDisplay === 'join'}">Rejoindre une partie</div>
+      </div>
+      <div class="panel">
+        <div class="input-group" v-if="subDisplay != 'list'">
+          <label for="name">Entrez votre pseudo :</label>
+          <input type="text" id="name" name="name" required maxlength="20">
+          <div class="error" v-if="error !== ''" style="color:red">{{error}}</div>
+        </div>
+        <div class="room-list" v-if="subDisplay === 'list'">
+          <div class="item" v-for="(room, i) in rooms" :key="i" @click="joinGame(room.id)">
+            <p>{{room.id}}</p>
+            <p>{{room.nbPlayers}} / {{room.mode}}</p>
+          </div>
+        </div>
+        <div class="create" v-if="subDisplay === 'create'">
+          <div class="input-group">
+            <label for="mode">Choisissez le nombre de joueurs :</label>
+            <div>
+              <div class="checkbox" :class="{selected: mode === i + 1}" v-for="i in 3" :key="i" @click="mode = i + 1">{{i + 1}}</div>
+            </div>
+          </div>
+          <div class="input-group">
+            <input type="checkbox" id="private" name="private">
+            <label for="private">Salle privée</label>
+          </div>
+          <div class="btn" @click="createGame()">Créer la salle</div>
+        </div>
+        <div class="join" v-if="subDisplay === 'join'">
+          <div class="input-group">
+            <label>Entrez l'ID de la salle : </label>
+            <input type="text" id="room" name="room" minlength ="36" maxlength="36">
+          </div>
+          <div class="btn" @click="joinGame()">Rejoindre la partie</div>
+        </div>
       </div>
     </div>
     <div id="game" key="2" v-if="display === 'game'">
@@ -72,6 +103,8 @@ export default {
   name: 'GameBoard',
   data() {
     return {
+      rooms: [],
+      mode: 4,
       players: [],
       playerOrder: null,
       currentOrder: 1,
@@ -82,9 +115,11 @@ export default {
       selectedDomino: null,
       socket: null,
       display: 'home',
+      subDisplay: 'list',
       currentRoom: null,
       text: '',
       error: '',
+      wantCreate: false,
       wantJoin: false,
       fetched: false,
       selection: false,
@@ -104,7 +139,6 @@ export default {
     }
   },
   created() {
-    debugger
     if (matchMedia) {
       this.mq.mobile = window.matchMedia('(max-width:480px)')
       this.mq.largeMobile = window.matchMedia('(min-width:481px) and (max-width:767px')
@@ -118,7 +152,7 @@ export default {
       ? 'https://ouboude-api.herokuapp.com/'
       : 'http://localhost:5000'
 
-    this.socket = io.connect('https://ouboude-api.herokuapp.com/', { transports: ['websocket'], upgrade: false, path: '/socket' })
+    this.socket = io.connect(connection, { transports: ['websocket'], upgrade: false, path: '/socket' })
     console.log(connection)
     // window.addEventListener('scroll', this.changeSection);
   },
@@ -130,9 +164,12 @@ export default {
     initSocket() {
       const that = this
 
+      this.socket.on('onPlayerConnected', that.onPlayerConnected)
       this.socket.on('onGameCreated', that.onGameCreated)
       this.socket.on('onGameJoined', that.onGameJoined)
       this.socket.on('onGameResumed', that.onGameResumed)
+      this.socket.on('onNewGame', that.onNewGame)
+      this.socket.on('onGameClosed', that.onGameClosed)
       this.socket.on('onNewPlayer', that.onNewPlayer)
       this.socket.on('onPlayerLeft', that.onPlayerLeft)
       this.socket.on('onGameStarted', that.onGameStarted)
@@ -152,18 +189,17 @@ export default {
       this.socket.close()
     },
     createGame() {
-      debugger
       if (document.getElementById('name').value === '') {
         this.error = 'Entrez un nom'
         return
       }
 
       this.nickname = document.getElementById('name').value
-      this.socket.emit('createNewGame', { nickname: this.nickname, mode: 4 })
+      this.socket.emit('createNewGame', { nickname: this.nickname, mode: this.mode })
       this.display = 'game'
     },
-    joinGame() {
-      this.currentRoom = document.getElementById('room').value
+    joinGame(id) {
+      this.currentRoom = id || document.getElementById('room').value
       this.nickname = document.getElementById('name').value
 
       if (document.getElementById('name').value === '') {
@@ -201,6 +237,9 @@ export default {
       this.$forceUpdate()
 
       this.changeOrder()
+    },
+    onPlayerConnected(payload) {
+      this.rooms = payload
     },
     onGameCreated(payload) {
       const {
@@ -263,6 +302,19 @@ export default {
 
       this.openPopup(`${winner} a gagné`)
     },
+    onNewGame(room) {
+      this.rooms.push(room)
+    },
+    onGameClosed(roomID) {
+      for (let i = 0; i < this.rooms.length; i += 1) {
+        const room = this.rooms[i]
+
+        if (room.id === roomID) {
+          this.rooms.splice(i, 1)
+          break
+        }
+      }
+    },
     onNewPlayer(player) {
       this.openPopup(`Le joueur ${player.nickname} a rejoint la partie`)
       if (player) {
@@ -273,8 +325,14 @@ export default {
 
       this.$forceUpdate()
     },
-    onPlayerLeft(id) {
-      this.players = this.players.filter((x) => x.id !== id)
+    onPlayerLeft(payload) {
+      const { playerID, roomID } = payload
+
+      if (this.currentRoom === roomID) {
+        this.players = this.players.filter((x) => x.id !== playerID)
+      } else {
+        const room = this.rooms
+      }
     },
     onNewDomino(payload) {
       const { domino, toLeft, id } = payload
@@ -435,6 +493,8 @@ body
   margin 0
   background-color navajowhite
 
+h1, h2
+  margin 0
 // ::-webkit-scrollbar
 //   width 10px
 
@@ -450,6 +510,88 @@ body
 .flex-center
   display flex
   justify-content center
+  align-items center
+
+#home
+  display grid
+  width 100%
+  height 100vh
+  grid-template-areas:
+  '. title title title .'\
+  '. btn-list btn-list btn-list .'\
+  '. panel panel panel .'
+  '. . . . .'
+  grid-gap 10px
+  grid-template-rows 1fr .5fr 5fr 1fr
+  grid-template-columns .2fr 1fr 1fr 1fr .2fr
+  & > .title
+    grid-area title
+    text-align center
+    margin-top 20px
+  & > .btn-list
+    grid-area btn-list
+    display flex
+    justify-content space-around
+    align-items center
+    & > .btn
+      width 25%
+      height 80%
+
+.checkbox
+  @extend .flex-center
+  width 60px
+  height 60px
+  background-color white
+  border 2px solid transparent
+
+.btn
+  @extend .flex-center
+  background-color white
+  border-radius 5px
+  border 2px solid transparent
+  text-align center
+  &:hover
+    border 2px solid black
+
+.btn, .checkbox
+  cursor pointer
+
+.btn.selected, .btn:hover, .checkbox.selected, .checkbox:hover
+  border 2px solid black
+
+.panel
+  grid-area panel
+  display flex
+  flex-direction column
+  align-items center
+  justify-content center
+  overflow-y hidden scroll
+  border 2px solid black
+
+.room-list, .create, .join
+    width 80%
+    height 80%
+    display flex
+    flex-direction column
+    margin 10px 0
+
+.room-list > .item
+  background-color white
+  border 3px solid transparent
+  border-radius 10px
+  margin 5px 0
+  display flex
+  justify-content space-around
+  &:hover
+    border 3px solid black
+
+.create, .join
+  justify-content space-around
+
+.create > .input-group > div
+  margin 15px
+  display flex
+  justify-content space-around
   align-items center
 
 #game
@@ -552,17 +694,10 @@ body
 
 .boude-container
   grid-area boude
-  & > .btn
-    @extend .flex-center
-    width 50px
-    height 30px
-    background-color white
-    border-radius 15%
-    &:hover
-      border 2px solid black
 
 .selection, .popup
   width 80%
+  height 55%
   background-color white
   border-radius 50%
   text-align center
@@ -661,7 +796,12 @@ body
     height 60px
 
 @media (min-width: 1023px)
-  .board.domino
+  #home
+    grid-template-areas:
+    '. title title title .'\
+    '. btn-list btn-list btn-list .'\
+    '. panel panel panel .'
+    '. . . . .'
 
   .domino-list > .domino
     width 110px
@@ -673,130 +813,6 @@ body
     & > .line
       width 80%
       height 5px
-
-// #game
-//   display grid
-//   width 100%
-//   height 100vh
-//   grid-template-areas:
-//   '. p3 .'\
-//   'p2 board p4'\
-//   '. p1 .'
-//   grid-template-rows 1fr 2fr 2fr
-//   grid-template-columns 1fr 12fr 1fr
-
-// [class^="player-"]
-//   display flex
-//   justify-content center
-//   align-items center
-
-// .board
-//   grid-area board
-//   display flex
-//   justify-content center
-//   align-items center
-//   min-width 100%
-//   height 100%
-//   & > .double
-//     width 45px
-//     height 75px
-//     margin .5px
-//   & > .simple
-//     flex-direction row
-//     width 75px
-//     height 45px
-//     margin .5px
-//   & > .double > .half-dom
-//     width 70%
-//     height 45%
-//   & > .simple > .half-dom
-//     width 45%
-//     height 70%
-//     transform rotate(-90deg)
-//   & > .simple > .line
-//       width 10px
-//       height 70%
-//       padding 5px 0
-
-// .container
-//   @extend .flex-center
-//   width 100%
-//   height 100%
-//   grid-area board
-//   z-index 10
-
-// .player-1 > .domino
-//   width 110px
-//   height 187px
-//   margin 10px
-//   &:hover
-//     margin-bottom 50px
-
-// .player-2, .player-4
-//   flex-direction column
-//   & > .domino
-//     width 100px
-//     height 55px
-//     margin 4px
-
-// .player-1
-//   grid-area p1
-
-// .player-2
-//   grid-area p2
-
-// .player-3
-//   grid-area p3
-//   & > .domino
-//     width 55px
-//     height 100px
-//     margin 4px
-
-// .player-4
-//   grid-area p4
-
-// .domino
-//   background-color white
-//   display flex
-//   flex-direction column
-//   align-items center
-//   border 2px solid black
-//   &.disabled
-//     background-color rgba(0, 0, 0, 0.45)
-
-// .half-dom
-//   width 80%
-//   height 42.5%
-//   display grid
-//   grid-template-rows repeat(3, 1fr)
-//   grid-template-columns repeat(3, 1fr)
-//   padding 5%
-//   grid-gap 2%
-
-// .line
-//   width 70%
-//   height 10px
-//   padding 0 10%
-//   background-color black
-
-// [class^='dot-']
-//   background-color black
-//   border-radius 50%
-//   padding 3px
-
-// .container
-//   @extend .flex-center
-//   width 100%
-//   height 100%
-//   z-index 10
-
-// .popup, .selection
-//   @extend .flex-center
-//   flex-direction column
-//   background-color white
-//   width 40%
-//   height 15vh
-//   border-radius 50%
 
 .room
   position fixed

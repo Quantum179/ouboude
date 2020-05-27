@@ -31,7 +31,7 @@ const IPADDR = env.IP
 
 // Run App
 server.listen(process.env.PORT || 5000, () =>
-  console.log('Server is currently running at port' + (process.env.PORT || 5000))
+  console.log('Server is currently running at port ' + (process.env.PORT || 5000))
 )
 
 server.on('close', function() {

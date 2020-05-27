@@ -7,11 +7,23 @@ const rooms = []
 export const initSocket = (server, origin) => {
   const io = new SocketIO(server, { path: '/socket'})
   io.set('origins', '*:*');
-  io.set('match origin protocol', true);
+  if (process.env.NODE_ENV === 'production') { io.set('match origin protocol', true) }
   io.set('transports', ['websocket'])
 
   io.on('connection', (socket) => {
+    // TODO : refactoriser tous les events dans des fichiers séparés
     console.log('a new socket client is connected')
+    const activeRooms = []
+
+    for (let id of Object.keys(rooms)) {
+      const room = rooms[id]
+
+      if (!room.isPrivate) {
+        activeRooms.push({id: room.id, nbPlayers: room.players.length, mode: room.mode})
+      }
+    }
+
+    socket.emit('onPlayerConnected', activeRooms)
 
     socket.on('connect_timeout', (timeout) => {
       console.log('connection timeout')
@@ -29,11 +41,14 @@ export const initSocket = (server, origin) => {
     socket.on('createNewGame', (data) => {
       console.log('game creation request')
 
-      const { nickname, mode } = data
+      const { nickname, mode, isPrivate } = data
+      const roomID = uuid4()
       const room = {
         created: true,
         players: [],
-        mode
+        mode,
+        id: roomID,
+        isPrivate: !!isPrivate
       }
       const player = {
         id: uuid4(),
@@ -43,7 +58,6 @@ export const initSocket = (server, origin) => {
         victoryCount: 0,
         connected: true
       }
-      const roomID = uuid4()
 
       socket.join(roomID)
 
@@ -56,10 +70,12 @@ export const initSocket = (server, origin) => {
         order: player.order,
         id: player.id
       })
+
+      socket.broadcast.emit('onNewGame', { id: roomID, nbPlayers: 1, mode })
     })
 
     socket.on('joinGame', (data) => {
-      const { roomID, nickname } = data
+      const { roomID, nickname, isBot } = data
       const room = rooms[roomID]
 
       if (!room) {
@@ -78,7 +94,8 @@ export const initSocket = (server, origin) => {
           socket,
           nickname,
           victoryCount: 0,
-          connected: true
+          connected: true,
+          isBot
         }
 
         room.players.sort((a, b) => a.order - b.order)
@@ -143,7 +160,13 @@ export const initSocket = (server, origin) => {
             }
           } else {
             room.players.splice(room.players.indexOf(player), 1)
-            socket.broadcast.to(roomID).emit('onPlayerLeft', playerID)
+
+            if (room.players.length === 0) {
+              delete rooms[roomID]
+              socket.broadcast.emit('onGameClosed', roomID)
+            } else {
+              socket.broadcast.emit('onPlayerLeft', { playerID, roomID })
+            }
           }
         }
       }
